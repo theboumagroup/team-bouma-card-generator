@@ -1,3 +1,6 @@
 node_modules/
 # Add .npmrc when you have multiple node binaries.
 .npmrc
+dist/
+playwright-report/
+test-results/

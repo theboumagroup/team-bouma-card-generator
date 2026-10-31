@@ -6,5 +6,6 @@
   "videosFolder": "tests/videos",
   "baseUrl": "http://localhost:5000",
   "supportFile": false,
-  "video": false
+  "video": false,
+  "testFiles": "generateImage.spec.js"
 }

@@ -6,7 +6,7 @@ Cypress.Screenshot.defaults({
 
 context('Generate Image', () => {
   beforeEach(() => {
-    cy.visit('/');
+    cy.visit('/legacy/index.html');
   })
 
   it('should generate multiple outputs and remove them if user clicks delete', () => {
