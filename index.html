@@ -19,6 +19,9 @@
             ><option value="">Custom message</option></select
           ></label
         >
+        <button id="backup-templates" class="secondary">
+          Back up templates
+        </button>
         <button id="manage" class="secondary">Manage templates</button>
         <div class="recipients">
           <label
@@ -34,6 +37,14 @@
             ></textarea>
           </label>
         </div>
+        <button id="update-recipient" class="secondary">
+          Update recipient in message
+        </button>
+        <p class="hint">
+          After one-off edits, update only untouched recipient fields. Manually
+          edited names stay yours; insert {first_names} or {address} to mark a
+          new field.
+        </p>
         <label
           >Personalized message<textarea
             id="message"

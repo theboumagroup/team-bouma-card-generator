@@ -162,26 +162,22 @@ test('JSON backups merge copies; invalid imports do not overwrite', async ({
   const data = JSON.parse(fs.readFileSync(file, 'utf8'));
   expect(data.version).toBe(1);
   expect(data.templates).toHaveLength(4);
-  await page
-    .locator('#import-templates')
-    .setInputFiles({
-      name: 'backup.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify(data))
-    });
+  await page.locator('#import-templates').setInputFiles({
+    name: 'backup.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(data))
+  });
   await expect(page.locator('#template-status')).toContainText('Imported 4');
   expect(await page.locator('#managed-template option').count()).toBe(9);
   for (const bad of [
     '{',
     JSON.stringify({ version: 1, templates: [{ name: 'Bad', message: 42 }] })
   ]) {
-    await page
-      .locator('#import-templates')
-      .setInputFiles({
-        name: 'invalid.json',
-        mimeType: 'application/json',
-        buffer: Buffer.from(bad)
-      });
+    await page.locator('#import-templates').setInputFiles({
+      name: 'invalid.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(bad)
+    });
     expect(await page.locator('#managed-template option').count()).toBe(9);
   }
 });
@@ -217,6 +213,9 @@ for (const panel of ['top', 'bottom'])
       const ctx = c.getContext('2d');
       ctx.drawImage(image, 0, 0);
       const d = ctx.getImageData(0, 0, c.width, c.height).data;
+      let transparent = 0,
+        opaque = 0,
+        white = 0;
       let top = c.height,
         bottom = 0,
         left = c.width,
@@ -224,6 +223,10 @@ for (const panel of ['top', 'bottom'])
       for (let y = 0; y < c.height; y++)
         for (let x = 0; x < c.width; x++) {
           const i = (y * c.width + x) * 4;
+          if (d[i + 3] === 0) transparent++;
+          if (d[i + 3] === 255) opaque++;
+          if (d[i + 3] > 0 && d[i] > 240 && d[i + 1] > 240 && d[i + 2] > 240)
+            white++;
           if (d[i] < 170 && d[i + 3] > 0) {
             top = Math.min(top, y);
             bottom = Math.max(bottom, y);
@@ -231,8 +234,11 @@ for (const panel of ['top', 'bottom'])
             right = Math.max(right, x);
           }
         }
-      return { top, bottom, left, right };
+      return { top, bottom, left, right, transparent, opaque, white };
     }, png);
+    expect(ink.transparent).toBeGreaterThan(1800 * 1200 * 0.9);
+    expect(ink.opaque).toBeGreaterThan(0);
+    expect(ink.white).toBe(0);
     expect(ink.top).toBeGreaterThan(250);
     expect(ink.bottom).toBeLessThan(950);
     expect(ink.left).toBeGreaterThan(0);
@@ -245,6 +251,12 @@ for (const panel of ['top', 'bottom'])
     );
     expect(xml.match(/<w:sectPr>/g)).toHaveLength(1);
     expect(xml).not.toContain('w:type="page"');
+    expect(xml.match(/<w:p[ >]/g)).toHaveLength(1);
+    expect(xml.match(/<w:drawing>/g)).toHaveLength(1);
+    expect(xml).not.toMatch(
+      /<w:(t|tbl|headerReference|footerReference|pageBreakBefore)[ >]/
+    );
+    expect(xml).toContain('w:line="1"');
     expect(xml).toContain('cx="5486400" cy="3657600"');
   });
 test('medium message and calibration export; filename sanitization', async ({
@@ -340,4 +352,128 @@ test('mobile layout and custom font load without persisting font or recipient da
   await page.reload();
   await expect(page.locator('#font')).not.toHaveValue('Session font');
   await expect(page.locator('#names')).toHaveValue('');
+});
+
+test('explicit recipient refresh preserves custom prose and never replaces arbitrary matching names', async ({
+  page
+}) => {
+  await page.locator('#names').fill('Alex');
+  await page.locator('#template').selectOption({ index: 1 });
+  const original = await page.locator('#message').inputValue();
+  await page
+    .locator('#message')
+    .fill(original + '\nA personal note: Alex recommended this neighbourhood.');
+  await page.locator('#names').fill('Jamie and Sam');
+  await expect(page.locator('#message')).toHaveValue(
+    original + '\nA personal note: Alex recommended this neighbourhood.'
+  );
+  await page.locator('#update-recipient').click();
+  await expect(page.locator('#message')).toHaveValue(
+    original.replace('Dear Alex,', 'Dear Jamie and Sam,') +
+      '\nA personal note: Alex recommended this neighbourhood.'
+  );
+  await page.locator('#names').fill('Taylor');
+  await page.locator('#update-recipient').click();
+  expect(await page.locator('#message').inputValue()).toContain('Dear Taylor,');
+  expect(await page.locator('#message').inputValue()).toContain(
+    'Alex recommended'
+  );
+  const stored = await page.evaluate(() =>
+    localStorage.getItem('bouma.cards.v1')
+  );
+  expect(stored).not.toContain('Jamie');
+  expect(stored).not.toContain('personal note');
+});
+
+test('manually edited recipient fields stay untouched; explicit tokens can be refreshed', async ({
+  page
+}) => {
+  await manager(page);
+  await newTemplate(
+    page,
+    'Recipient fields',
+    'Dear {first_names},\n{address}\nThank you, {first_names}!'
+  );
+  await close(page);
+  await page.locator('#names').fill('Alex');
+  await page.locator('#address').fill('123 Fiction Street\nOttawa');
+  await page.locator('#template').selectOption({ label: 'Recipient fields' });
+  const text = await page.locator('#message').inputValue();
+  await page
+    .locator('#message')
+    .fill(text.replace('Dear Alex,', 'Dear dear friends,'));
+  await page.locator('#names').fill('Taylor');
+  await page.locator('#address').fill('456 Example Street\nToronto');
+  await page.locator('#update-recipient').click();
+  await expect(page.locator('#message')).toHaveValue(
+    'Dear dear friends,\n456 Example Street\nToronto\nThank you, Taylor!'
+  );
+  await page
+    .locator('#message')
+    .fill('Dear {first_names},\nMy complete rewrite.\n{address}');
+  await page.locator('#update-recipient').click();
+  await expect(page.locator('#message')).toHaveValue(
+    'Dear Taylor,\nMy complete rewrite.\n456 Example Street\nToronto'
+  );
+  await page.locator('#message').fill('Entirely custom greeting');
+  await page.locator('#update-recipient').click();
+  await expect(page.locator('#message')).toHaveValue(
+    'Entirely custom greeting'
+  );
+  await expect(page.locator('#status')).toContainText(
+    'No untouched recipient fields'
+  );
+});
+
+test('backup is discoverable on the main screen', async ({ page }) => {
+  await expect(
+    page.getByRole('button', { name: 'Back up templates', exact: true })
+  ).toBeVisible();
+  const d = page.waitForEvent('download');
+  await page.locator('#backup-templates').click();
+  const path = await (await d).path();
+  expect(JSON.parse(fs.readFileSync(path, 'utf8')).templates).toHaveLength(4);
+});
+
+for (const panel of ['top', 'bottom'])
+  for (const offset of [-6, 6])
+    test(`${panel} export stays inside its half at ${offset} mm calibration limits`, async ({
+      page
+    }) => {
+      await page.locator('#message').fill('A short handwritten thank-you.');
+      await page.locator('#panel').selectOption(panel);
+      await page.locator('summary').click();
+      await page.locator('#x').fill(String(offset));
+      await page.locator('#y').fill(String(offset));
+      const { xml } = unzip(await word(page));
+      const x = Number(
+        xml.match(/<wp:positionH[^>]*>.*?<wp:posOffset>(\d+)/)[1]
+      );
+      const y = Number(
+        xml.match(/<wp:positionV[^>]*>.*?<wp:posOffset>(\d+)/)[1]
+      );
+      const half = (panel === 'top' ? 0 : 5) * 914400;
+      expect(x).toBeGreaterThan(0);
+      expect(x + 6 * 914400).toBeLessThan(7 * 914400);
+      expect(y).toBeGreaterThan(half);
+      expect(y + 4 * 914400).toBeLessThan(half + 5 * 914400);
+      expect(xml).not.toMatch(
+        /<w:t[ >]|<w:br[ >]|<w:headerReference|<w:footerReference/
+      );
+    });
+
+test('typing a greeting into an initially empty name placeholder takes ownership of that field', async ({
+  page
+}) => {
+  await page.locator('#template').selectOption({ index: 1 });
+  const text = await page.locator('#message').inputValue();
+  await page.locator('#message').fill(text.replace('Dear ,', 'Dear friends,'));
+  await page.locator('#names').fill('Alex');
+  await page.locator('#update-recipient').click();
+  expect(await page.locator('#message').inputValue()).toContain(
+    'Dear friends,'
+  );
+  expect(await page.locator('#message').inputValue()).not.toContain(
+    'Alexfriends'
+  );
 });

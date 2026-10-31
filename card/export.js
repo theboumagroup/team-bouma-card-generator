@@ -4,7 +4,8 @@ import {
   Paragraph,
   ImageRun,
   HorizontalPositionRelativeFrom,
-  VerticalPositionRelativeFrom
+  VerticalPositionRelativeFrom,
+  LineRuleType
 } from 'docx';
 export const WIDTH = 576,
   HEIGHT = 384,
@@ -56,7 +57,13 @@ export async function wordBlob(canvas, settings) {
           },
           children: [
             new Paragraph({
-              spacing: { before: 0, after: 0 },
+              spacing: {
+                before: 0,
+                after: 0,
+                line: 1,
+                lineRule: LineRuleType.EXACT
+              },
+              run: { size: 2 },
               children: [image]
             })
           ]

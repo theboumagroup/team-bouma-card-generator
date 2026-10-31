@@ -16,7 +16,7 @@
     "build": "node scripts/build.mjs",
     "test:cards": "playwright test",
     "test:legacy": "cypress run",
-    "check": "node --check card/app.js && node --check card/storage.js && node --check card/export.js"
+    "check": "node --check card/app.js && node --check card/storage.js && node --check card/export.js && node --check card/personalization.js"
   },
   "repository": {
     "type": "git",

@@ -1,10 +1,5 @@
-import {
-  load,
-  save,
-  personalize,
-  validateTemplates,
-  importTemplates
-} from './storage.js';
+import { workingCopy, trackEdit, updateRecipient } from './personalization.js';
+import { load, save, validateTemplates, importTemplates } from './storage.js';
 import {
   WIDTH,
   HEIGHT,
@@ -86,6 +81,7 @@ let selected = '',
   base = '',
   managerId = '',
   managerDirty = false;
+let copy = { text: '', fields: [] };
 const recipient = () => ({
   firstNames: $('names').value,
   address: $('address').value
@@ -129,7 +125,8 @@ new ResizeObserver(updatePreview).observe($('sheet').parentElement);
 function applyTemplate(id) {
   selected = id;
   base = state.templates.find((t) => t.id === id)?.message || '';
-  $('message').value = personalize(base, recipient());
+  copy = workingCopy(base, recipient());
+  $('message').value = copy.text;
   workingDirty = false;
   updatePreview();
 }
@@ -145,18 +142,31 @@ $('template').addEventListener('change', () => {
 });
 $('message').addEventListener('input', () => {
   workingDirty = true;
+  copy = trackEdit(copy, $('message').value);
   updatePreview();
 });
 for (const id of ['names', 'address'])
   $(id).addEventListener('input', () => {
     if (!workingDirty) {
-      $('message').value = personalize(base, recipient());
+      copy = workingCopy(base, recipient());
+      $('message').value = copy.text;
       updatePreview();
     } else
       status(
-        'Recipient updated. Your one-off message edits were kept; update the greeting in the message if needed.'
+        'Recipient details changed. Your edits were kept. Use Update recipient in message to refresh untouched recipient fields.'
       );
   });
+
+$('update-recipient').onclick = () => {
+  copy = updateRecipient(copy, recipient());
+  $('message').value = copy.text;
+  updatePreview();
+  status(
+    copy.fields.length
+      ? 'Recipient fields updated. Your other message edits and saved template were kept.'
+      : 'No untouched recipient fields remain. Edit the greeting directly, or insert {first_names} or {address} and click Update recipient in message.'
+  );
+};
 for (const key in defaults)
   $(key).addEventListener('input', () => {
     updatePreview();
@@ -270,7 +280,7 @@ $('delete-template').onclick = () => {
     templateError(e);
   }
 };
-$('export-templates').onclick = () =>
+$('backup-templates').onclick = $('export-templates').onclick = () =>
   download(
     new Blob(
       [JSON.stringify({ version: 1, templates: state.templates }, null, 2)],
@@ -329,7 +339,7 @@ async function capture(calibration) {
     zIndex: '-1',
     display: 'flex',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: 'transparent',
     width: `${WIDTH}px`,
     height: `${HEIGHT}px`
   });
@@ -356,7 +366,7 @@ async function capture(calibration) {
       scale: SCALE,
       width: WIDTH,
       height: HEIGHT,
-      backgroundColor: '#ffffff',
+      backgroundColor: null,
       scrollX: 0,
       scrollY: 0
     });
