@@ -1,0 +1,218 @@
+@font-face {
+  font-family: Caveat;
+  src: url('../dist/fonts/caveat.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Homemade Apple';
+  src: url('../dist/fonts/homemade-apple.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Liu Jian Mao Cao';
+  src: url('../dist/fonts/liu-jian-mao-cao.woff2') format('woff2');
+  font-display: swap;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f5f4f0;
+  color: #243d41;
+  font: 16px/1.5 system-ui, sans-serif;
+}
+header,
+main,
+footer {
+  max-width: 1240px;
+  margin: auto;
+  padding: 24px;
+}
+.brand {
+  letter-spacing: 0.22em;
+  font-size: 12px;
+  font-weight: 700;
+}
+h1 {
+  font-size: 34px;
+  margin: 4px 0;
+}
+h2 {
+  font-size: 20px;
+}
+header p {
+  margin: 0;
+  color: #647473;
+}
+main {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(320px, 1fr);
+  gap: 36px;
+  padding-top: 0;
+}
+.editor,
+.preview {
+  min-width: 0;
+}
+.editor {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #dfe3dd;
+}
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 12px 0;
+}
+input,
+textarea,
+select {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #bfcac4;
+  border-radius: 6px;
+  font: inherit;
+  color: #243d41;
+  background: white;
+  margin-top: 5px;
+}
+textarea {
+  resize: vertical;
+}
+input[type='color'] {
+  height: 44px;
+  padding: 4px;
+}
+button {
+  font: inherit;
+  border: 1px solid #294c43;
+  background: #294c43;
+  color: white;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.secondary {
+  background: white;
+  color: #294c43;
+  border-color: #aebfb6;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.hint {
+  font-size: 12px;
+  color: #61716b;
+}
+.settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 12px;
+}
+summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 12px 0;
+}
+details {
+  border-block: 1px solid #e3e7e2;
+}
+.preview > p {
+  font-size: 13px;
+  color: #61716b;
+}
+.sheet-frame {
+  width: 100%;
+  overflow: hidden;
+  background: #e4e7df;
+  padding: 16px;
+  border-radius: 8px;
+}
+#sheet {
+  width: 672px;
+  height: 960px;
+  position: relative;
+  background: white;
+  box-shadow: 0 2px 8px #0002;
+  transform-origin: top left;
+}
+.fold {
+  position: absolute;
+  top: 480px;
+  width: 100%;
+  border-top: 1px dashed #a9b8b2;
+}
+#render {
+  position: absolute;
+  left: 48px;
+  top: 48px;
+  width: 576px;
+  height: 384px;
+  background: white;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+#handwriting {
+  padding: 4px;
+  width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+  font-family: Caveat;
+  font-size: 24px;
+  color: #163b69;
+}
+#status {
+  white-space: pre-line;
+  font-size: 14px;
+}
+dialog {
+  border: 1px solid #bfcac4;
+  border-radius: 12px;
+  max-width: 640px;
+  width: calc(100% - 32px);
+  max-height: 90vh;
+  padding: 24px;
+}
+dialog::backdrop {
+  background: #172f35aa;
+}
+.close {
+  float: right;
+}
+footer {
+  font-size: 12px;
+  color: #61716b;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: 3px solid #ba812d;
+  outline-offset: 3px;
+}
+@media (max-width: 800px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+  header,
+  main,
+  footer {
+    padding: 16px;
+  }
+  .preview {
+    order: 2;
+  }
+}

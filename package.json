@@ -1,32 +1,38 @@
 {
-  "name": "text-to-handwriting",
+  "name": "team-bouma-card-generator",
   "version": "1.0.0-rc.1",
-  "description": "Hey everyone! text-to-handwriting is a tool that lets you generate image that looks like handwriting from text.",
-  "main": "js/app.js",
+  "description": "Private, local-first handwritten thank-you cards with Word export",
+  "main": "card/app.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "test": "cypress run",
+    "test": "playwright test",
     "eslint": "eslint --fix \"js/**/**.mjs\"",
     "prettier": "prettier --write \"./index.html\" \"js/**/**.mjs\" \"css/**.css\"",
     "format": "npm run prettier",
     "cy": "cypress open",
-    "dev": "serve ."
+    "dev": "npm run build && serve . -l 5000",
+    "build": "node scripts/build.mjs",
+    "test:cards": "playwright test",
+    "test:legacy": "cypress run",
+    "check": "node --check card/app.js && node --check card/storage.js && node --check card/export.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/saurabhdaware/text-to-handwriting.git"
+    "url": "git+https://github.com/theboumagroup/team-bouma-card-generator.git"
   },
   "keywords": [],
   "author": "Saurabh Daware <saurabhdaware99@gmail.com> (https://saurabhdaware.in/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/saurabhdaware/text-to-handwriting/issues"
+    "url": "https://github.com/theboumagroup/team-bouma-card-generator/issues"
   },
-  "homepage": "https://github.com/saurabhdaware/text-to-handwriting#readme",
+  "homepage": "https://github.com/theboumagroup/team-bouma-card-generator#readme",
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "cypress": "^4.4.1",
+    "esbuild": "0.28.2",
     "eslint": "^7.0.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^6.11.0",
@@ -37,7 +43,13 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run prettier && eslint . --fix && npm run eslint"
+      "pre-commit": "npm run check"
     }
+  },
+  "dependencies": {
+    "@fontsource/caveat": "5.3.0",
+    "@fontsource/homemade-apple": "5.2.8",
+    "@fontsource/liu-jian-mao-cao": "5.2.7",
+    "docx": "9.15.0"
   }
 }

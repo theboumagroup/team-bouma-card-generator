@@ -1,14 +1,16 @@
-name: ESLint
+name: Source and build checks
 on: [push, pull_request]
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-
+  check:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v2
-      - name: ESLint
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 10
+          node-version: 24
+          cache: npm
       - run: npm ci
-      - run: npm run eslint
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+      - run: npm run check
+      - run: npm run build
