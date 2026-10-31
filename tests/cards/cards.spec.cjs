@@ -193,72 +193,68 @@ test('empty, unresolved and long messages block export without extra pages', asy
   await page.locator('#generate').click();
   await expect(page.locator('#status')).toContainText('does not fit');
 });
-for (const panel of ['top', 'bottom'])
-  test(`300 DPI DOCX has exact 7 × 10 page and ${panel} anchor`, async ({
-    page
-  }) => {
-    await page
-      .locator('#message')
-      .fill('Dear Alex,\n\nThank you for your kindness.\n\nMike');
-    await page.locator('#panel').selectOption(panel);
-    const path = await word(page);
-    const { xml, dimensions, png } = unzip(path);
-    const ink = await page.evaluate(async (b64) => {
-      const image = new Image();
-      image.src = 'data:image/png;base64,' + b64;
-      await image.decode();
-      const c = document.createElement('canvas');
-      c.width = image.width;
-      c.height = image.height;
-      const ctx = c.getContext('2d');
-      ctx.drawImage(image, 0, 0);
-      const d = ctx.getImageData(0, 0, c.width, c.height).data;
-      let transparent = 0,
-        opaque = 0,
-        white = 0;
-      let top = c.height,
-        bottom = 0,
-        left = c.width,
-        right = 0;
-      for (let y = 0; y < c.height; y++)
-        for (let x = 0; x < c.width; x++) {
-          const i = (y * c.width + x) * 4;
-          if (d[i + 3] === 0) transparent++;
-          if (d[i + 3] === 255) opaque++;
-          if (d[i + 3] > 0 && d[i] > 240 && d[i + 1] > 240 && d[i + 2] > 240)
-            white++;
-          if (d[i] < 170 && d[i + 3] > 0) {
-            top = Math.min(top, y);
-            bottom = Math.max(bottom, y);
-            left = Math.min(left, x);
-            right = Math.max(right, x);
-          }
+test('300 DPI DOCX has exact 7 × 10 page and fixed lower-panel anchor', async ({
+  page
+}) => {
+  await page
+    .locator('#message')
+    .fill('Dear Alex,\n\nThank you for your kindness.\n\nMike');
+  const path = await word(page);
+  const { xml, dimensions, png } = unzip(path);
+  const ink = await page.evaluate(async (b64) => {
+    const image = new Image();
+    image.src = 'data:image/png;base64,' + b64;
+    await image.decode();
+    const c = document.createElement('canvas');
+    c.width = image.width;
+    c.height = image.height;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(image, 0, 0);
+    const d = ctx.getImageData(0, 0, c.width, c.height).data;
+    let transparent = 0,
+      opaque = 0,
+      white = 0;
+    let top = c.height,
+      bottom = 0,
+      left = c.width,
+      right = 0;
+    for (let y = 0; y < c.height; y++)
+      for (let x = 0; x < c.width; x++) {
+        const i = (y * c.width + x) * 4;
+        if (d[i + 3] === 0) transparent++;
+        if (d[i + 3] === 255) opaque++;
+        if (d[i + 3] > 0 && d[i] > 240 && d[i + 1] > 240 && d[i + 2] > 240)
+          white++;
+        if (d[i] < 170 && d[i + 3] > 0) {
+          top = Math.min(top, y);
+          bottom = Math.max(bottom, y);
+          left = Math.min(left, x);
+          right = Math.max(right, x);
         }
-      return { top, bottom, left, right, transparent, opaque, white };
-    }, png);
-    expect(ink.transparent).toBeGreaterThan(1800 * 1200 * 0.9);
-    expect(ink.opaque).toBeGreaterThan(0);
-    expect(ink.white).toBe(0);
-    expect(ink.top).toBeGreaterThan(250);
-    expect(ink.bottom).toBeLessThan(950);
-    expect(ink.left).toBeGreaterThan(0);
-    expect(ink.right).toBeLessThan(1800);
-    expect(dimensions).toEqual([1800, 1200]);
-    expect(xml).toMatch(/w:w="10080" w:h="14400"/);
-    expect(xml).toContain('<wp:posOffset>457200</wp:posOffset>');
-    expect(xml).toContain(
-      `<wp:posOffset>${panel === 'top' ? 457200 : 5029200}</wp:posOffset>`
-    );
-    expect(xml.match(/<w:sectPr>/g)).toHaveLength(1);
-    expect(xml).not.toContain('w:type="page"');
-    expect(xml.match(/<w:p[ >]/g)).toHaveLength(1);
-    expect(xml.match(/<w:drawing>/g)).toHaveLength(1);
-    expect(xml).not.toMatch(
-      /<w:(t|tbl|headerReference|footerReference|pageBreakBefore)[ >]/
-    );
-    expect(xml).toContain('w:line="1"');
-    expect(xml).toContain('cx="5486400" cy="3657600"');
-  });
+      }
+    return { top, bottom, left, right, transparent, opaque, white };
+  }, png);
+  expect(ink.transparent).toBeGreaterThan(1800 * 1200 * 0.9);
+  expect(ink.opaque).toBeGreaterThan(0);
+  expect(ink.white).toBe(0);
+  expect(ink.top).toBeGreaterThan(250);
+  expect(ink.bottom).toBeLessThan(950);
+  expect(ink.left).toBeGreaterThan(0);
+  expect(ink.right).toBeLessThan(1800);
+  expect(dimensions).toEqual([1800, 1200]);
+  expect(xml).toMatch(/w:w="10080" w:h="14400"/);
+  expect(xml).toContain('<wp:posOffset>457200</wp:posOffset>');
+  expect(xml).toContain('<wp:posOffset>5029200</wp:posOffset>');
+  expect(xml.match(/<w:sectPr>/g)).toHaveLength(1);
+  expect(xml).not.toContain('w:type="page"');
+  expect(xml.match(/<w:p[ >]/g)).toHaveLength(1);
+  expect(xml.match(/<w:drawing>/g)).toHaveLength(1);
+  expect(xml).not.toMatch(
+    /<w:(t|tbl|headerReference|footerReference|pageBreakBefore)[ >]/
+  );
+  expect(xml).toContain('w:line="1"');
+  expect(xml).toContain('cx="5486400" cy="3657600"');
+});
 test('medium message and calibration export; filename sanitization', async ({
   page
 }) => {
@@ -271,13 +267,23 @@ test('medium message and calibration export; filename sanitization', async ({
   const d = page.waitForEvent('download');
   await page.locator('#generate').click();
   expect((await d).suggestedFilename()).toBe('Thank You Card - Alex  Sam.docx');
-  await page.locator('#panel').selectOption('bottom');
   await page.locator('summary').click();
   await page.locator('#x').fill('2');
+  await page.evaluate(() => {
+    const render = window.html2canvas;
+    window.html2canvas = (element, options) => {
+      window.calibrationLabel = element.textContent;
+      return render(element, options);
+    };
+  });
   const c = page.waitForEvent('download');
   await page.locator('#calibrate').click();
   const path = await (await c).path();
   expect(unzip(path).xml).toContain('<wp:posOffset>529200</wp:posOffset>');
+  expect(unzip(path).xml).toContain('<wp:posOffset>5029200</wp:posOffset>');
+  expect(await page.evaluate(() => window.calibrationLabel)).toContain(
+    'LOWER PANEL'
+  );
 });
 test('legacy equivalent: generation, deletion, margins and lines', async ({
   page
@@ -435,32 +441,26 @@ test('backup is discoverable on the main screen', async ({ page }) => {
   expect(JSON.parse(fs.readFileSync(path, 'utf8')).templates).toHaveLength(4);
 });
 
-for (const panel of ['top', 'bottom'])
-  for (const offset of [-6, 6])
-    test(`${panel} export stays inside its half at ${offset} mm calibration limits`, async ({
-      page
-    }) => {
-      await page.locator('#message').fill('A short handwritten thank-you.');
-      await page.locator('#panel').selectOption(panel);
-      await page.locator('summary').click();
-      await page.locator('#x').fill(String(offset));
-      await page.locator('#y').fill(String(offset));
-      const { xml } = unzip(await word(page));
-      const x = Number(
-        xml.match(/<wp:positionH[^>]*>.*?<wp:posOffset>(\d+)/)[1]
-      );
-      const y = Number(
-        xml.match(/<wp:positionV[^>]*>.*?<wp:posOffset>(\d+)/)[1]
-      );
-      const half = (panel === 'top' ? 0 : 5) * 914400;
-      expect(x).toBeGreaterThan(0);
-      expect(x + 6 * 914400).toBeLessThan(7 * 914400);
-      expect(y).toBeGreaterThan(half);
-      expect(y + 4 * 914400).toBeLessThan(half + 5 * 914400);
-      expect(xml).not.toMatch(
-        /<w:t[ >]|<w:br[ >]|<w:headerReference|<w:footerReference/
-      );
-    });
+for (const offset of [-6, 6])
+  test(`export stays inside the lower half at ${offset} mm calibration limits`, async ({
+    page
+  }) => {
+    await page.locator('#message').fill('A short handwritten thank-you.');
+    await page.locator('summary').click();
+    await page.locator('#x').fill(String(offset));
+    await page.locator('#y').fill(String(offset));
+    const { xml } = unzip(await word(page));
+    const x = Number(xml.match(/<wp:positionH[^>]*>.*?<wp:posOffset>(\d+)/)[1]);
+    const y = Number(xml.match(/<wp:positionV[^>]*>.*?<wp:posOffset>(\d+)/)[1]);
+    const half = 5 * 914400;
+    expect(x).toBeGreaterThan(0);
+    expect(x + 6 * 914400).toBeLessThan(7 * 914400);
+    expect(y).toBeGreaterThan(half);
+    expect(y + 4 * 914400).toBeLessThan(half + 5 * 914400);
+    expect(xml).not.toMatch(
+      /<w:t[ >]|<w:br[ >]|<w:headerReference|<w:footerReference/
+    );
+  });
 
 test('typing a greeting into an initially empty name placeholder takes ownership of that field', async ({
   page
@@ -477,3 +477,48 @@ test('typing a greeting into an initially empty name placeholder takes ownership
     'Alexfriends'
   );
 });
+
+for (const oldPanel of ['top', 'bottom'])
+  test(`obsolete ${oldPanel} preference is removed without losing templates or handwriting settings`, async ({
+    page
+  }) => {
+    const before = await page.evaluate((panel) => {
+      const data = JSON.parse(localStorage.getItem('bouma.cards.v1'));
+      data.preferences = {
+        font: 'Homemade Apple',
+        size: 20,
+        ink: '#123456',
+        letter: 1,
+        word: 2,
+        x: 2,
+        y: -2,
+        panel
+      };
+      data.templates = data.templates.slice(0, 1);
+      data.templates[0].name = 'My retained template';
+      localStorage.setItem('bouma.cards.v1', JSON.stringify(data));
+      return data;
+    }, oldPanel);
+    await page.reload();
+    await expect(page.locator('#panel')).toHaveCount(0);
+    expect(
+      await page
+        .locator('#render')
+        .evaluate((el) => parseFloat(getComputedStyle(el).top))
+    ).toBeCloseTo((5.5 - 2 / 25.4) * 96, 2);
+    const after = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('bouma.cards.v1'))
+    );
+    expect(after.templates).toEqual(before.templates);
+    const { panel, ...preferences } = before.preferences;
+    expect(after.preferences).toEqual(preferences);
+    await page.locator('summary').click();
+    for (const [key, value] of Object.entries(preferences))
+      await expect(page.locator('#' + key)).toHaveValue(String(value));
+    await page.reload();
+    expect(await page.locator('#template option').count()).toBe(2);
+    await page.locator('#message').fill('A lower-panel note.');
+    const { xml } = unzip(await word(page));
+    const y = Number(xml.match(/<wp:positionV[^>]*>.*?<wp:posOffset>(\d+)/)[1]);
+    expect(y).toBe(Math.round((5.5 - 2 / 25.4) * 914400));
+  });

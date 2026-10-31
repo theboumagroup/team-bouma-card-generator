@@ -16,7 +16,6 @@ const defaults = {
   ink: '#163b69',
   letter: 0,
   word: 0,
-  panel: 'top',
   x: 0,
   y: 0
 };
@@ -63,7 +62,6 @@ function readSettings() {
       throw Error(`Check ${key}: value must be ${min} to ${max}.`);
   }
   if (
-    !['top', 'bottom'].includes(s.panel) ||
     !/^#[0-9a-f]{6}$/i.test(s.ink) ||
     !['Caveat', 'Homemade Apple', 'Liu Jian Mao Cao', 'Session font'].includes(
       s.font
@@ -354,9 +352,7 @@ async function capture(calibration) {
       padding: '24px',
       color: 'black'
     });
-    text.textContent = `TEAM BOUMA — ${s.panel.toUpperCase()} HALF\n↑ TOP OF SHEET\n7 × 10 inch portrait sheet\nFold at 5 inches\nPrint Actual Size / 100%\n6 × 4 inch inner rectangle\nOffset: ${
-      s.x
-    } mm horizontal, ${s.y} mm vertical`;
+    text.textContent = `TEAM BOUMA — LOWER PANEL\n↑ TOP OF SHEET\n7 × 10 inch portrait sheet\nFold at 5 inches\nPrint Actual Size / 100%\n6 × 4 inch inner rectangle\nOffset: ${s.x} mm horizontal, ${s.y} mm vertical`;
     text.style.whiteSpace = 'pre-wrap';
     clone.append(text);
   }
@@ -387,7 +383,7 @@ async function generate(calibration = false) {
     );
     status(
       calibration
-        ? 'Calibration downloaded. Use plain paper first. Mark the feed edge and test both panel choices at Actual Size / 100%.'
+        ? 'Calibration downloaded. Use plain paper first. Mark the feed edge and confirm the lower-panel feed orientation at Actual Size / 100%.'
         : 'Word document downloaded. Print at Actual Size / 100%; confirm 7 × 10 inch portrait paper in Word and the printer driver.'
     );
   } catch (e) {

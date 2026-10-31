@@ -13,7 +13,7 @@ export const WIDTH = 576,
 export function imagePosition(settings) {
   return {
     x: 0.5 + Number(settings.x) / 25.4,
-    y: (settings.panel === 'bottom' ? 5 : 0) + 0.5 + Number(settings.y) / 25.4
+    y: 5.5 + Number(settings.y) / 25.4
   };
 }
 export async function wordBlob(canvas, settings) {

@@ -1,6 +1,6 @@
 # Team Bouma Card Generator
 
-A standalone, local-first tool for handwritten thank-you cards. Choose a saved template, enter recipient names, edit a working message, and download a **7 × 10 inch portrait Word document**. One 7 × 5 inch half receives the handwriting; the other stays blank. No account, database, backend, analytics, or Team Bouma/DYMO integration is required.
+A standalone, local-first tool for handwritten thank-you cards. Choose a saved template, enter recipient names, edit a working message, and download a **7 × 10 inch portrait Word document**. Handwriting always prints in the lower 7 × 5 inch panel, below the horizontal fold at 5 inches; the upper half stays blank. No account, database, backend, analytics, or Team Bouma/DYMO integration is required.
 
 Based on [Text to Handwriting by Saurabh Daware](https://github.com/saurabhdaware/text-to-handwriting). Original **MIT licence and Copyright (c) 2020 Saurabh Daware** are preserved in [LICENSE](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for library and font licences.
 
@@ -22,8 +22,8 @@ If Cypress's separate legacy binary is not needed, install using `CYPRESS_INSTAL
 1. Choose a saved template, or leave **Custom message** selected.
 2. Enter recipient first names. Mailing address is optional and supports multiple lines. It appears in the message **only** if the template explicitly contains `{address}`.
 3. Edit the personalized message. Paragraphs and line breaks are preserved. Recipient data and one-off messages are not persisted.
-4. Open **Handwriting & print preferences** for font, size, colour, letter/word spacing, custom font upload, and alignment. These choices persist locally, except uploaded font files (session only).
-5. Select **Top half** or **Bottom half**. This is a physical printer choice: the initial top-half setting is provisional, not a claim about your stationery feed direction.
+4. Open **Handwriting & print preferences** for font, size, colour, letter/word spacing, custom font upload, and alignment. These choices persist locally, except uploaded font files (session only). Older panel-selection preferences are removed automatically while saved templates and all other handwriting preferences are preserved.
+5. Check the preview: the centred handwriting area is fixed in the **lower panel**, below the fold. There is no panel selector.
 6. Click **Generate Word Document**. Empty messages, unresolved `{placeholders}`, and messages that exceed the printable panel block export with instructions to shorten the message or adjust its size/spacing.
 
 Changing handwriting preferences never replaces your message. If you edit the message manually, later recipient changes preserve those edits. Click **Update recipient in message** to refresh the remaining template-derived name/address fields without replacing your custom prose. A manually edited recipient field is no longer managed and is left untouched, even if it matches an old name elsewhere in the message. If you rewrite the whole message, edit the greeting directly or insert `{first_names}` / `{address}` and click the update button. Multiple separate edits can make a field's provenance ambiguous; the safe fallback is to leave it alone, never guess by replacing matching names throughout your text. Switching templates asks before discarding one-off edits. Keep a copy of important unsaved messages before closing the page.
@@ -47,12 +47,12 @@ Templates and preferences use **browser-specific localStorage**. They do not syn
 Use a test sheet before expensive stationery:
 
 1. In Word and the printer driver set a **custom 7 inch wide × 10 inch high portrait** paper size. The fold is horizontal at 5 inches.
-2. Choose a panel and download **calibration**. The document labels the chosen half and the top of the sheet; its inner rectangle is exactly **6 × 4 inches**.
-3. Mark your plain paper's leading edge, print single-sided, and fold it. Use the result to choose the correct top/bottom panel and paper-feed orientation. Test both panels if needed.
+2. Download **calibration**. It always prints in the lower panel and labels the lower panel and top of the sheet; its inner rectangle is exactly **6 × 4 inches**.
+3. Mark your plain paper's leading edge, print single-sided, and fold it. Use the result to establish the correct paper-feed orientation so the message lands below the fold. The application always targets the lower panel.
 4. Measure the calibration rectangle. Print at **100% / Actual Size**, never Fit to Page. Disable printer-driver scaling as well. If the size is wrong, fix scaling rather than alignment offsets.
 5. Adjust horizontal/vertical offsets (±6 mm) for small printer shifts, then repeat calibration. Offsets retain more than 0.26 inches of edge/fold clearance.
 
-The normal message area is a fixed **6 × 4 inches**, centred within the selected half with 0.5 inch nominal margins. Text is vertically centred at your chosen font size; short messages are not enlarged. Rendering is **1800 × 1200 pixels (300 DPI)**, embedded as a page-relative PNG at its original physical dimensions. The preview stays plain white. Export uses a **transparent PNG background**, so only your ink is painted onto coloured or textured stationery. There is no opaque white rectangle, notebook ruling, margin line, scanner effect, or preview fold guide. The calibration rectangle and labels also have a transparent background. Printer/Word handling of transparency still needs the physical acceptance check below. Font size defaults to 18 pt, dark blue, plain paper, high resolution.
+The normal message area is a fixed **6 × 4 inches**, centred within the lower half with 0.5 inch nominal margins: 0.5 inches from the left edge and 5.5 inches from the top of the unfolded sheet, before calibration adjustments. Text is vertically centred at your chosen font size; short messages are not enlarged. Rendering is **1800 × 1200 pixels (300 DPI)**, embedded as a page-relative PNG at its original physical dimensions. The preview stays plain white. Export uses a **transparent PNG background**, so only your ink is painted onto coloured or textured stationery. There is no opaque white rectangle, notebook ruling, margin line, scanner effect, or preview fold guide. The calibration rectangle and labels also have a transparent background. Printer/Word handling of transparency still needs the physical acceptance check below. Font size defaults to 18 pt, dark blue, plain paper, high resolution.
 
 ## Tests
 

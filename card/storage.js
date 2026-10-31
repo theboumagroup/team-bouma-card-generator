@@ -58,7 +58,9 @@ export function load() {
       'Saved data could not be read. Export a backup before resetting browser data.'
     );
   validateTemplates(data.templates);
-  return { templates: data.templates, preferences: data.preferences };
+  // Retire panel selection without changing templates or other preferences.
+  const { panel: obsoletePanel, ...preferences } = data.preferences;
+  return { templates: data.templates, preferences };
 }
 export function save(state) {
   localStorage.setItem(KEY, JSON.stringify({ version: 1, ...state }));
